@@ -39,7 +39,7 @@ public class BasicRoute {
         //                         .map(CVEEntity::getModifiedAt)
         //                         .orElse(Instant.EPOCH);
         Instant cutoff = Instant.now().minus(1500, ChronoUnit.DAYS);
-        int page = 1;
+        int page = 41;
         boolean finished = false;
         while(!finished) {
             List<CVEDto> response = circlCveService.getCvesOnetime(page, PAGE_SIZE);

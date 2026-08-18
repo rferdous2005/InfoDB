@@ -279,7 +279,7 @@ public class CirclCveService {
                 break;
             } catch (Exception e) {
                 log.info("Too many Request Error");
-                Thread.sleep(61000);
+                Thread.sleep(300000);
             }
         }
         

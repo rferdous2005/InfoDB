@@ -65,7 +65,7 @@ public class CVESyncService {
     }
 
     private Instant parseInstant(String value) {
-        if(value == null || value.isBlank()) return Instant.EPOCH;
+        if(value == null || value.isBlank()) return Instant.now();
         try{
             return Instant.parse(value);
         } catch(DateTimeParseException e) {
@@ -83,6 +83,7 @@ public class CVESyncService {
         cveEntity.setSeverity(cveDto.getSeverity());
         cveEntity.setVendor(cveDto.getVendor());
         cveEntity.setProduct(cveDto.getProduct());
+        cveEntity.setState(cveDto.getState());
         cveEntity.setPublishedAt(parseInstant(cveDto.getPublishedAt()));
         cveEntity.setModifiedAt(parseInstant(cveDto.getModifiedAt()));
         return cveEntity;
