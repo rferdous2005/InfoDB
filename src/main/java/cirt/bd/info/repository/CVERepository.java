@@ -9,5 +9,5 @@ import cirt.bd.info.entity.CVEEntity;
 
 @Repository
 public interface CVERepository extends JpaRepository<CVEEntity, String> {
-    Optional<CVEEntity> findTopByOrderByUpdatedAtDesc();
+    Optional<CVEEntity> findTopByOrderByModifiedAtDesc();
 }

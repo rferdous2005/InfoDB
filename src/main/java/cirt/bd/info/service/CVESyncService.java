@@ -29,18 +29,18 @@ public class CVESyncService {
 
     @Transactional
     @Async
-    public void saveCveBatch(List<CVEEntity> cveEntities) {
+    public void saveCveBatch(List<CVEEntity> cveEntities, int page) {
         try {
             cveRepository.saveAll(cveEntities);
             cveRepository.flush();
+            log.info("Daily Cron Job Saving successful page {}.", page);
         } catch (Exception e) {
-            log.error(
-                    "Skipping batch saving due to database error: {}", e.getMessage());
+            log.error("Daily Cron Job Skipping saving page {} due to database error: {}", page, e.getMessage());
         }
     }
 
     public void synchronize() {
-        Instant newestTime = cveRepository.findTopByOrderByUpdatedAtDesc()
+        Instant newestTime = cveRepository.findTopByOrderByModifiedAtDesc()
                 .map(CVEEntity::getModifiedAt)
                 .orElse(Instant.EPOCH);
         Instant cutoff = newestTime.minus(5, ChronoUnit.MINUTES);
@@ -61,9 +61,7 @@ public class CVESyncService {
                 cveEntities.add(toCveEntity(cveDto));
             }
             if (!cveEntities.isEmpty()) {
-                cveRepository.saveAll(cveEntities);
-                cveRepository.flush();
-                System.out.println("Saved Page " + page + ": " + cveEntities.size() + " CVEs");
+                this.saveCveBatch(cveEntities, page);
             }
             if (finished || response.size() < PAGE_SIZE) {
                 break;
