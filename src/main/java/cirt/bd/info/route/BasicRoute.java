@@ -39,7 +39,7 @@ public class BasicRoute {
         //                         .map(CVEEntity::getModifiedAt)
         //                         .orElse(Instant.EPOCH);
         Instant cutoff = Instant.now().minus(1500, ChronoUnit.DAYS);
-        int page = 430;
+        int page = 666;
         boolean finished = false;
         while(!finished) {
             List<CVEDto> response = circlCveService.getCvesOnetime(page, PAGE_SIZE);
@@ -92,6 +92,7 @@ public class BasicRoute {
     private CVEEntity toCveEntity(CVEDto cveDto) {
         CVEEntity cveEntity = new CVEEntity();
         cveEntity.setCveId(cveDto.getCveId());
+        cveEntity.setCweId(cveDto.getCweId());
         cveEntity.setTitle(cveDto.getTitle());
         cveEntity.setDescription(cveDto.getDescription());
         cveEntity.setCvssScore(cveDto.getCvssScore());
