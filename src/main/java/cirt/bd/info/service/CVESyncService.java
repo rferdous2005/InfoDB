@@ -85,6 +85,7 @@ public class CVESyncService {
         CVEEntity cveEntity = new CVEEntity();
         cveEntity.setCveId(cveDto.getCveId());
         cveEntity.setTitle(cveDto.getTitle());
+        cveEntity.setCweId(cveDto.getCweId());
         cveEntity.setDescription(cveDto.getDescription());
         cveEntity.setCvssScore(cveDto.getCvssScore());
         cveEntity.setCvssVersion(cveDto.getCvssVersion());
