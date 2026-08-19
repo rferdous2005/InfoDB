@@ -233,7 +233,7 @@ public class CirclCveService {
     }
 
     public List<CVEDto> getLatestCves(int page, int pageSize) {
-        String LATEST_CVE_URL = BASE_URL + "/?date_sort=updated&sort_order=desc&page="+ page + "&per_page="+pageSize;
+        String LATEST_CVE_URL = BASE_URL + "vulnerability/?date_sort=updated&sort_order=desc&page="+ page + "&per_page="+pageSize;
         String response = restTemplate.getForObject(LATEST_CVE_URL,String.class);
         Map<String, CVEDto> cvesById = new LinkedHashMap<>();
         if (response == null || response.isBlank()) {
