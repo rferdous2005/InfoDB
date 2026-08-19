@@ -75,7 +75,8 @@ public class BasicRoute {
             cveRepository.saveAll(cveEntities);
             cveRepository.flush();
         } catch (Exception e) {
-            // TODO: handle exception
+            log.error(
+                "Skipping batch saving due to database error: {}",e.getMessage());
         }
     }
 
