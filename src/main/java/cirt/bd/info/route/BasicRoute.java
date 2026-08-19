@@ -71,8 +71,12 @@ public class BasicRoute {
     @Transactional
     @Async
     public void saveCveBatch(List<CVEEntity> cveEntities) {
-        cveRepository.saveAll(cveEntities);
-        cveRepository.flush();
+        try {
+            cveRepository.saveAll(cveEntities);
+            cveRepository.flush();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
     }
 
     private Instant parseInstant(String value) {
