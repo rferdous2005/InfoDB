@@ -235,10 +235,13 @@ public class CirclCveService {
     public List<CVEDto> getLatestCves(int page, int pageSize) {
         String LATEST_CVE_URL = BASE_URL + "vulnerability/?date_sort=updated&sort_order=desc&page="+ page + "&per_page="+pageSize;
         String response = restTemplate.getForObject(LATEST_CVE_URL,String.class);
+        log.info("By scheduler API URL: "+ LATEST_CVE_URL);
+        log.info("By scheduler Response: "+response);
         Map<String, CVEDto> cvesById = new LinkedHashMap<>();
         if (response == null || response.isBlank()) {
             return List.of();
         }
+        
         try {
             JsonNode root = objectMapper.readTree(response);
             if (!root.isArray()) {
@@ -271,7 +274,7 @@ public class CirclCveService {
     }
 
     public List<CVEDto> getCvesOnetime(int page, int pageSize) throws InterruptedException {
-        String LATEST_CVE_URL = BASE_URL + "vulnerability/?date_sort=published&sort_order=desc&page="+ page + "&per_page="+pageSize;
+        String LATEST_CVE_URL = BASE_URL + "vulnerability/?date_sort=updated&sort_order=asc&per_page=100&since=2022-01-01&page="+page;
         String response="";
         while (true) {
             try {
@@ -279,7 +282,8 @@ public class CirclCveService {
                 break;
             } catch (Exception e) {
                 log.info("Too many Request Error");
-                Thread.sleep(300000);
+                Thread.sleep(5000);
+                return null;
             }
         }
         

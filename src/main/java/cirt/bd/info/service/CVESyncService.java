@@ -62,8 +62,9 @@ public class CVESyncService {
             }
             if (!cveEntities.isEmpty()) {
                 this.saveCveBatch(cveEntities, page);
+                log.info("At scheduler : Saved Page "+page+": "+cveEntities.size()+" CVEs");
             }
-            if (finished || response.size() < PAGE_SIZE) {
+            if (finished) {
                 break;
             }
             page++;

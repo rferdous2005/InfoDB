@@ -38,18 +38,23 @@ public class BasicRoute {
         // Instant newestTime = cveRepository.findTopByOrderByUpdatedAtDesc()
         //                         .map(CVEEntity::getModifiedAt)
         //                         .orElse(Instant.EPOCH);
-        Instant cutoff = Instant.now().minus(1500, ChronoUnit.DAYS);
-        int page = 666;
+        Instant cutoff = Instant.now().minus(1700, ChronoUnit.DAYS);
+        int page = 2920;
         boolean finished = false;
         while(!finished) {
             List<CVEDto> response = circlCveService.getCvesOnetime(page, PAGE_SIZE);
             // log.info("DTO size: "+ response.size());
-            if(response == null || response.isEmpty()) break;
+            if(response == null || response.isEmpty()) {
+                page++;
+                continue;
+            }
+            
             List<CVEEntity> cveEntities = new ArrayList<>();
             for(CVEDto cveDto: response) {
-                Instant updated = parseInstant(cveDto.getPublishedAt());
-                log.info(cutoff+ "  " + updated);
+                Instant updated = parseInstant(cveDto.getModifiedAt());
+                // log.info(cutoff+ "  " + updated);
                 if(updated.isBefore(cutoff)) {
+                    log.info(cutoff+ "  " + updated);
                     finished = true;
                     break;
                 }
@@ -60,12 +65,9 @@ public class BasicRoute {
                 saveCveBatch(cveEntities);
                 log.info("Saved Page "+page+": "+cveEntities.size()+" CVEs");
             }
-            if(finished) {
-                break;
-            }
             page++;
         }
-        log.info("CVE Sync finished at page "+ page);
+        log.info("CVE Sync finished at page "+ (page-1));
     }
 
     @Transactional
