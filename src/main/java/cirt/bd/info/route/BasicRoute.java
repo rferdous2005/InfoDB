@@ -9,15 +9,21 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import cirt.bd.info.dto.CVEDto;
 import cirt.bd.info.entity.CVEEntity;
+import cirt.bd.info.entity.CWEEntity;
 import cirt.bd.info.repository.CVERepository;
 import cirt.bd.info.service.CVESyncService;
+import cirt.bd.info.service.CapecService;
 import cirt.bd.info.service.CirclCveService;
+import cirt.bd.info.service.CweService;
 import jakarta.transaction.Transactional;
 
 @RestController
@@ -26,13 +32,20 @@ public class BasicRoute {
     private final int PAGE_SIZE = 100;
     private final CVERepository cveRepository;
     private final CirclCveService circlCveService;
+    private final CweService cweService;
+    private final CapecService capecService;
 
     public BasicRoute(
             CVERepository cveRepository,
-            CirclCveService circlCveService) {
+            CirclCveService circlCveService,
+            CweService cweService,
+            CapecService capecService) {
         this.cveRepository = cveRepository;
         this.circlCveService = circlCveService;
+        this.cweService = cweService;
+        this.capecService = capecService;
     }
+
     @GetMapping("/init")
     public void fetchHistoricalCVEs() throws InterruptedException {
         // Instant newestTime = cveRepository.findTopByOrderByUpdatedAtDesc()
@@ -98,5 +111,17 @@ public class BasicRoute {
         cveEntity.setPublishedAt(parseInstant(cveDto.getPublishedAt()));
         cveEntity.setModifiedAt(parseInstant(cveDto.getModifiedAt()));
         return cveEntity;
+    }
+
+    @GetMapping(value = "/cwe")
+    public String importCwe() {
+        String url = "https://vulnerability.circl.lu/api/cwe/?per_page=1000&page=1";
+        cweService.importAllCwes();
+        return "CWE info saved to DB";
+    }
+    @GetMapping(value = "/capec")
+    public String importCapec() {
+        capecService.importAllCapecs();
+        return "CAPEC info saved to DB";
     }
 }
