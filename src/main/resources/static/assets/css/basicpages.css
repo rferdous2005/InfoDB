@@ -1,0 +1,142 @@
+/* General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.8;
+    background-color: #f0f4f8;
+    color: #333;
+}
+
+/* Header */
+.base_header-container {
+    background: linear-gradient(90deg, #232a84, #3b50a1);
+    color: white;
+    text-align: center;
+    padding: 30px 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.base_header-container h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.container h2 {
+    margin-top: 20px;
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+/* Main Content */
+main {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Sections */
+.base_mission-section, .base_vision-section, .base_about-section, .base_what-section {
+    margin-bottom: 40px;
+    padding: 30px;
+    border-left: 8px solid #3848a1;
+    background: linear-gradient(90deg, #edfdfd, #f7fff7);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.base_mission-section:hover, .base_vision-section:hover, .base_about-section:hover, .base_what-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.base_mission-section h2, .base_vision-section h2, .base_about-section h2, .base_what-section h2 {
+    color: #2f4785;
+    margin-bottom: 20px;
+    font-size: 2rem;
+    text-transform: uppercase;
+    border-bottom: 2px solid #384fa1;
+    padding-bottom: 10px;
+}
+
+.base_mission-section ul, .base_vision-section ul, .base_about-section ul, .base_what-section ul {
+    padding-left: 30px;
+    list-style-type: disc;
+    margin-top: 15px;
+}
+
+.base_mission-section ul li, .base_vision-section ul li, .base_about-section ul li, .base_what-section ul li {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #273167;
+}
+
+.base_service > h3 {
+    color: #273167;
+    margin-top: 20px;
+    font-size: 1.5rem;
+    text-decoration: underline;
+}
+
+.base_service p {
+    margin-top: 10px;
+    line-height: 1.8;
+    font-size: 1.15rem;
+    color: #333;
+}
+
+/* Buttons */
+button {
+    background-color: #384ba1;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2f4085;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .base_header-container h1 {
+        font-size: 2.5rem;
+    }
+
+    main {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .base_mission-section h2, .base_vision-section h2, .base_about-section h2, .base_what-section h2 {
+        font-size: 1.8rem;
+    }
+
+}
+
+@media (max-width: 480px) {
+    .base_header-container h1 {
+        font-size: 2rem;
+    }
+
+    main {
+        padding: 15px;
+    }
+
+    .base_mission-section ul li, .base_vision-section ul li, .base_about-section ul li, .base_what-section ul li {
+        font-size: 1rem;
+    }
+
+}

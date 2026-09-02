@@ -25,7 +25,7 @@ public class CVESyncService {
     @Autowired
     private CVERepository cveRepository;
     @Autowired
-    private CirclCveService circlCveService;
+    private CveService cveService;
 
     @Transactional
     @Async
@@ -33,28 +33,28 @@ public class CVESyncService {
         try {
             cveRepository.saveAll(cveEntities);
             cveRepository.flush();
-            log.info("Daily Cron Job Saving successful page {}.", page);
+            log.warn("Daily Cron Job Saving successful page {}.", page);
         } catch (Exception e) {
             log.error("Daily Cron Job Skipping saving page {} due to database error: {}", page, e.getMessage());
         }
     }
 
     public void synchronize() {
-        Instant newestTime = cveRepository.findTopByOrderByModifiedAtDesc()
-                .map(CVEEntity::getModifiedAt)
+        Instant newestTime = cveRepository.findTopByOrderByPublishedAtDesc()
+                .map(CVEEntity::getPublishedAt)
                 .orElse(Instant.EPOCH);
         Instant cutoff = newestTime.minus(5, ChronoUnit.MINUTES);
         int page = 1;
         boolean finished = false;
         while (!finished) {
-            List<CVEDto> response = circlCveService.getLatestCves(page, PAGE_SIZE);
+            List<CVEDto> response = cveService.getLatestCves(page, PAGE_SIZE);
 
             if (response == null || response.isEmpty())
                 break;
             List<CVEEntity> cveEntities = new ArrayList<>();
             for (CVEDto cveDto : response) {
-                Instant updated = parseInstant(cveDto.getModifiedAt());
-                if (!updated.isAfter(cutoff)) {
+                Instant published = parseInstant(cveDto.getPublishedAt());
+                if (published.isBefore(cutoff)) {
                     finished = true;
                     break;
                 }
@@ -62,14 +62,14 @@ public class CVESyncService {
             }
             if (!cveEntities.isEmpty()) {
                 this.saveCveBatch(cveEntities, page);
-                log.info("At scheduler : Saved Page "+page+": "+cveEntities.size()+" CVEs");
+                log.warn("At scheduler : Saved Page "+page+": "+cveEntities.size()+" CVEs");
             }
             if (finished) {
                 break;
             }
             page++;
         }
-        System.out.println("CVE Sync finished at page " + page);
+        log.warn("CVE Sync finished at page " + page);
     }
 
     private Instant parseInstant(String value) {

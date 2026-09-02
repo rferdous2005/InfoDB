@@ -21,7 +21,8 @@ import lombok.Setter;
         @Index(name = "idx_cve_published_at", columnList = "publishedAt"),
         @Index(name = "idx_cve_modified_at", columnList = "modifiedAt"),
         @Index(name = "idx_cve_cwe_id", columnList = "cweId"),
-        @Index(name = "idx_cve_severity", columnList = "severity")
+        @Index(name = "idx_cve_severity", columnList = "severity"),
+        @Index(name = "idx_created_updated", columnList = "updatedAt, createdAt")
 })
 public class CVEEntity {
     @Id
