@@ -18,6 +18,7 @@ public class CVESyncScheduler {
     private final AtomicBoolean running = new AtomicBoolean(false);
     // everyday at 2 AM
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Dhaka")
+    // @Scheduled(cron = "0 29 16 * * *", zone = "Asia/Dhaka")
     public void syncCves() {
         if(!running.compareAndSet(false, true)) return ;
         try {

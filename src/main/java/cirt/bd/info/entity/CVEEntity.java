@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name="cve")
+@Table(name = "cve_summary", indexes = {
+        @Index(name = "idx_cve_published_at", columnList = "publishedAt"),
+        @Index(name = "idx_cve_modified_at", columnList = "modifiedAt"),
+        @Index(name = "idx_cve_cwe_id", columnList = "cweId"),
+        @Index(name = "idx_cve_severity", columnList = "severity"),
+        @Index(name = "idx_created_updated", columnList = "updatedAt, createdAt")
+})
 public class CVEEntity {
     @Id
     @Column(length = 30)

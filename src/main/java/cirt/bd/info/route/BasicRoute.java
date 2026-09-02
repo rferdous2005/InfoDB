@@ -1,6 +1,8 @@
 package cirt.bd.info.route;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -9,28 +11,51 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+<<<<<<< HEAD
 import org.springframework.http.MediaType;
+=======
+import org.springframework.http.ResponseEntity;
+>>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+<<<<<<< HEAD
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+=======
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+>>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import org.springframework.web.bind.annotation.RestController;
 
+
 import cirt.bd.info.dto.CVEDto;
+
 import cirt.bd.info.entity.CVEEntity;
 import cirt.bd.info.entity.CWEEntity;
 import cirt.bd.info.repository.CVERepository;
 import cirt.bd.info.service.CVESyncService;
+<<<<<<< HEAD
 import cirt.bd.info.service.CapecService;
 import cirt.bd.info.service.CirclCveService;
 import cirt.bd.info.service.CweService;
+=======
+import cirt.bd.info.service.CirclCVEService;
+import cirt.bd.info.service.CirclCWEService;
+import cirt.bd.info.service.CirclCapecService;
+import cirt.bd.info.service.CveService;
+>>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import jakarta.transaction.Transactional;
 
-@RestController
+@Controller
+@RequestMapping
 public class BasicRoute {
     private static final Logger log = LoggerFactory.getLogger(BasicRoute.class);
     private final int PAGE_SIZE = 100;
     private final CVERepository cveRepository;
+<<<<<<< HEAD
     private final CirclCveService circlCveService;
     private final CweService cweService;
     private final CapecService capecService;
@@ -46,60 +71,87 @@ public class BasicRoute {
         this.capecService = capecService;
     }
 
+=======
+    private final CveService cveService;
+
+    public BasicRoute(
+            CVERepository cveRepository,
+            CveService cveService) {
+        this.cveRepository = cveRepository;
+        this.cveService = cveService;
+    }
+
+    
+>>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
     @GetMapping("/init")
     public void fetchHistoricalCVEs() throws InterruptedException {
         // Instant newestTime = cveRepository.findTopByOrderByUpdatedAtDesc()
-        //                         .map(CVEEntity::getModifiedAt)
-        //                         .orElse(Instant.EPOCH);
-        Instant cutoff = Instant.now().minus(1500, ChronoUnit.DAYS);
-        int page = 1;
+        // .map(CVEEntity::getModifiedAt)
+        // .orElse(Instant.EPOCH);
+        Instant cutoff = Instant.now().minus(1700, ChronoUnit.DAYS);
+        int page = 3700;
         boolean finished = false;
-        while(!finished) {
-            List<CVEDto> response = circlCveService.getCvesOnetime(page, PAGE_SIZE);
+        while (!finished) {
+            List<CVEDto> response = cveService.getCvesOnetime(page, PAGE_SIZE);
             // log.info("DTO size: "+ response.size());
-            if(response == null || response.isEmpty()) break;
+            if (response == null || response.isEmpty()) {
+                page++;
+                continue;
+            }
+
             List<CVEEntity> cveEntities = new ArrayList<>();
-            for(CVEDto cveDto: response) {
-                Instant updated = parseInstant(cveDto.getPublishedAt());
-                log.info(cutoff+ "  " + updated);
-                if(updated.isBefore(cutoff)) {
-                    finished = true;
-                    break;
-                }
+            for (CVEDto cveDto : response) {
+                Instant updated = parseInstant(cveDto.getModifiedAt());
+                // log.info(cutoff+ " " + updated);
                 cveEntities.add(toCveEntity(cveDto));
             }
             // log.info("Entity size: "+ cveEntities.size());
-            if(!cveEntities.isEmpty()) {
-                saveCveBatch(cveEntities);
-                log.info("Saved Page "+page+": "+cveEntities.size()+" CVEs");
-            }
-            if(finished) {
-                break;
+            if (!cveEntities.isEmpty()) {
+                cveService.saveCveBatch(cveEntities);
+                log.warn("Saved Page " + page + ": " + cveEntities.size() + " CVEs");
             }
             page++;
         }
-        log.info("CVE Sync finished at page "+ page);
+        log.info("CVE Sync finished at page " + (page - 1));
     }
 
-    @Transactional
-    @Async
-    public void saveCveBatch(List<CVEEntity> cveEntities) {
-        cveRepository.saveAll(cveEntities);
-        cveRepository.flush();
+    @GetMapping("/cve-circl")
+    public String showCVEPage(Model model) {
+        return "basic/cve-circl";
+    }
+
+    @GetMapping("/cve-local")
+    public String showLocalCVEPage(Model model) {
+        return "basic/cve-local";
     }
 
     private Instant parseInstant(String value) {
-        if(value == null || value.isBlank()) return Instant.now();
-        try{
-            return Instant.parse(value);
-        } catch(DateTimeParseException e) {
+
+        if (value == null || value.isBlank()) {
             return Instant.EPOCH;
         }
+        try {
+            return Instant.parse(value);
+        } catch (DateTimeParseException ignored) {
+        }
+
+        try {
+            return LocalDateTime
+                    .parse(value)
+                    .toInstant(ZoneOffset.UTC);
+
+        } catch (DateTimeParseException ignored) {
+        }
+        log.warn(
+                "Could not parse CVE timestamp: {}",
+                value);
+        return Instant.EPOCH;
     }
 
     private CVEEntity toCveEntity(CVEDto cveDto) {
         CVEEntity cveEntity = new CVEEntity();
         cveEntity.setCveId(cveDto.getCveId());
+        cveEntity.setCweId(cveDto.getCweId());
         cveEntity.setTitle(cveDto.getTitle());
         cveEntity.setDescription(cveDto.getDescription());
         cveEntity.setCvssScore(cveDto.getCvssScore());
