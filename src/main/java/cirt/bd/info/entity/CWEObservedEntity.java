@@ -19,6 +19,10 @@ import lombok.Setter;
         @Index(
             name = "idx_observed_reference",
             columnList = "reference"
+        ),
+        @Index(
+            name = "idx_cwe",
+            columnList = "cweId"
         )
     }
 )

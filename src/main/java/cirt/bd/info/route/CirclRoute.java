@@ -37,7 +37,6 @@ public class CirclRoute {
         String CVE_LIST_URL = "https://vulnerability.circl.lu/api/vulnerability/?date_sort=published&sort_order=desc&per_page=40&page=";
         int circlPageNo = page;
         if(latest != null && latest.equals("true")) {
-            circlPageNo += 2;
             CVE_LIST_URL = CVE_LIST_URL + circlPageNo;
         } else if(cweId != null && !cweId.isEmpty()) {
             CVE_LIST_URL = CVE_LIST_URL + circlPageNo + "&cwe=" + cweId;

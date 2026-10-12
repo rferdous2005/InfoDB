@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import cirt.bd.info.dto.CVEDto;
+import cirt.bd.info.dto.circl.CVEDetailsDto;
 import cirt.bd.info.entity.CVEEntity;
 import cirt.bd.info.repository.CVERepository;
 import cirt.bd.info.scheduled.CVESyncScheduler;
@@ -28,39 +30,34 @@ import tools.jackson.databind.ObjectMapper;
 public class CveService {
     @Autowired
     private CVERepository cveRepository;
+
     private final String BASE_URL = "https://vulnerability.circl.lu/api/";
     private static final Logger log = LoggerFactory.getLogger(CveService.class);
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // public CVEDto getCve(String id) {
-    // if (id == null || !id.toUpperCase().matches("^CVE-\\d{4}-\\d{4,}$")) {
-    // throw new IllegalArgumentException("Invalid CVE ID");
-    // }
-
-    // String normalizedCveId = id.toUpperCase();
-    // String url = BASE_URL + "vulnerability/" + normalizedCveId;
-
-    // String response = restTemplate.getForObject(url, String.class);
-
-    // try {
-    // JsonNode root = objectMapper.readTree(response);
-    // return convertToDto(root);
-    // } catch (Exception e) {
-    // throw new RuntimeException("Failed to parse CIRCL CVE response", e);
-    // }
-    // }
-
-    public String getCwe(String id) {
-        return restTemplate.getForObject(BASE_URL + "cwe/" + id, String.class);
+    public CVEEntity getCve(String id) {
+        Optional<CVEEntity> cve = this.cveRepository.findById(id);
+        if(cve.isPresent()) return cve.get();
+        else return null;
     }
 
-    public String getCapec(String id) {
-        return restTemplate.getForObject(BASE_URL + "capec/" + id, String.class);
-    }
+    public CVEDetailsDto getCveFromCircl(String id) {
+        if (id == null || !id.toUpperCase().matches("^CVE-\\d{4}-\\d{4,}$")) {
+            throw new IllegalArgumentException("Invalid CVE ID");
+        }
 
-    public String searchByKeyword(String keyword) {
-        return restTemplate.getForObject(BASE_URL + "search/" + keyword, String.class);
+        String normalizedCveId = id.toUpperCase();
+        String url = BASE_URL + "vulnerability/" + normalizedCveId;
+
+        String response = restTemplate.getForObject(url, String.class);
+
+        try {
+            JsonNode root = objectMapper.readTree(response);
+            return CirclCVEService.convertToDto(root);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse CIRCL CVE response", e);
+        }
     }
 
     private String cleanText(String value) {
@@ -185,15 +182,11 @@ public class CveService {
     }
 
     private CVEDto convertFlatCveToSummary(JsonNode root) {
-
         CVEDto dto = new CVEDto();
-
-        dto.setCveId(
-                root.path("id")
+        dto.setCveId(root.path("id")
                         .asString("")
                         .trim()
                         .toUpperCase());
-
         dto.setDescription(
                 extractEnglishDescription(
                         root.path("descriptions")));
@@ -204,23 +197,18 @@ public class CveService {
          */
         dto.setTitle(
                 shorten(dto.getDescription(), 160));
-
         dto.setState(
                 root.path("vulnStatus")
                         .asString(""));
-
         dto.setPublishedAt(
                 normalizeCveDate(
                         root.path("published")
                                 .asString("")));
-
         dto.setModifiedAt(
                 normalizeCveDate(
                         root.path("lastModified")
                                 .asString("")));
-
         dto.setSource("CVE");
-
         extractSummaryCweFromFlatCve(root, dto);
         extractSummaryCvssFromFlatCve(root, dto);
         extractSummaryAffectedProductFromFlatCve(root, dto);
@@ -229,16 +217,9 @@ public class CveService {
     }
 
     private CVEDto convertToSummaryDto(JsonNode root) {
-
-        /*
-         * Native CVE 5.x record
-         */
         if (root.has("cveMetadata")) {
             return convertCveRecordToSummary(root);
         }
-        /*
-         * GHSA record
-         */
         if (root.has("schema_version")
                 || root.has("aliases")
                 || root.path("id").asString("").startsWith("GHSA-")) {
@@ -266,39 +247,27 @@ public class CveService {
          * Prefer NVD Primary CWE.
          */
         for (JsonNode weakness : weaknesses) {
+            String source = weakness.path("source").asString("");
 
-            String source = weakness.path("source")
-                    .asString("");
-
-            String type = weakness.path("type")
-                    .asString("");
-
+            String type = weakness.path("type").asString("");
             if (!"nvd@nist.gov".equalsIgnoreCase(source)
                     || !"Primary".equalsIgnoreCase(type)) {
                 continue;
             }
-
             String cwe = extractCweFromWeakness(weakness);
-
             if (!cwe.isBlank()) {
                 dto.setCweId(cwe);
                 return;
             }
         }
 
-        /*
-         * Otherwise take the first real CWE available.
-         */
         for (JsonNode weakness : weaknesses) {
-
             String cwe = extractCweFromWeakness(weakness);
-
             if (!cwe.isBlank()) {
                 dto.setCweId(cwe);
                 return;
             }
         }
-
         dto.setCweId("");
     }
 
@@ -447,27 +416,16 @@ public class CveService {
     private void extractSummaryAffectedProductFromFlatCve(
             JsonNode root,
             CVEDto dto) {
-
         JsonNode affected = root.path("affected");
-
         Set<String> vendors = new LinkedHashSet<>();
-
         Set<String> products = new LinkedHashSet<>();
-
         if (!affected.isArray()) {
             dto.setVendor("");
             dto.setProduct("");
             return;
         }
 
-        /*
-         * Prefer the original CNA data first.
-         * Multiple enrichment sources can repeat the same
-         * vendor/product with different capitalization.
-         */
-        String sourceIdentifier = root.path("sourceIdentifier")
-                .asString("");
-
+        String sourceIdentifier = root.path("sourceIdentifier").asString("");
         extractFlatAffectedForSource(
                 affected,
                 sourceIdentifier,
@@ -478,21 +436,15 @@ public class CveService {
          * If CNA data gave us nothing, use all sources.
          */
         if (vendors.isEmpty() && products.isEmpty()) {
-
             for (JsonNode sourceNode : affected) {
-
                 extractFlatAffectedData(
                         sourceNode.path("affectedData"),
                         vendors,
                         products);
             }
         }
-
-        dto.setVendor(
-                String.join(", ", vendors));
-
-        dto.setProduct(
-                String.join(", ", products));
+        dto.setVendor(String.join(", ", vendors));
+        dto.setProduct(String.join(", ", products));
     }
 
     private void extractFlatAffectedForSource(

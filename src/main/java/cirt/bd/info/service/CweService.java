@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import cirt.bd.info.dto.CWEDetailsDto;
 import cirt.bd.info.entity.CWEEntity;
 import cirt.bd.info.entity.CWEObservedEntity;
 import cirt.bd.info.repository.CweObservedRepository;
@@ -29,6 +30,14 @@ public class CweService {
 
     private static final String CWE_DETAIL_URL = "https://vulnerability.circl.lu/api/cwe/{cweId}";
 
+    public CWEDetailsDto getCWEDetails(int cweId) {
+        CWEEntity cweEntity = cweRepository.findById(cweId)
+                .orElseThrow(() ->
+                        new RuntimeException("CWE not found: " + cweId));
+        List<CWEObservedEntity> examples = cweObservedRepository.findByCweId(cweId);
+        return new CWEDetailsDto(cweEntity, examples);
+    }
+    
     public int importAllCwes() {
         String response = restClient
                 .get()

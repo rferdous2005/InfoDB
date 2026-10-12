@@ -55,7 +55,7 @@ public class CirclCVEService {
         return restTemplate.getForObject(BASE_URL + "search/" + keyword, String.class);
     }
 
-    private CVEDetailsDto convertToDto(JsonNode root) {
+    public static CVEDetailsDto convertToDto(JsonNode root) {
         CVEDetailsDto dto = new CVEDetailsDto();
 
         JsonNode metadata = root.path("cveMetadata");
@@ -69,7 +69,7 @@ public class CirclCVEService {
 
         dto.setTitle(cleanText(text(cna, "title")));
         dto.setDescription(extractDescription(cna));
-        dto.setAdvisorySource(cna.path("source").path("advisory").asText(""));
+        dto.setAdvisorySource(cna.path("source").path("advisory").asString(""));
 
         extractCwe(cna, dto);
         extractCvss(cna, dto);
@@ -80,25 +80,25 @@ public class CirclCVEService {
         return dto;
     }
 
-    private String extractDescription(JsonNode cna) {
+    public static String extractDescription(JsonNode cna) {
         JsonNode descriptions = cna.path("descriptions");
 
         if (descriptions.isArray()) {
             for (JsonNode desc : descriptions) {
-                if ("en".equalsIgnoreCase(desc.path("lang").asText())) {
-                    return cleanText(desc.path("value").asText(""));
+                if ("en".equalsIgnoreCase(desc.path("lang").asString())) {
+                    return cleanText(desc.path("value").asString(""));
                 }
             }
 
             if (descriptions.size() > 0) {
-                return cleanText(descriptions.get(0).path("value").asText(""));
+                return cleanText(descriptions.get(0).path("value").asString(""));
             }
         }
 
         return "";
     }
 
-    private void extractCwe(JsonNode cna, CVEDetailsDto dto) {
+    public static void extractCwe(JsonNode cna, CVEDetailsDto dto) {
         JsonNode problemTypes = cna.path("problemTypes");
 
         if (!problemTypes.isArray()) {
@@ -115,8 +115,8 @@ public class CirclCVEService {
             }
 
             for (JsonNode desc : descriptions) {
-                String cweId = desc.path("cweId").asText("");
-                String description = desc.path("description").asText("");
+                String cweId = desc.path("cweId").asString("");
+                String description = desc.path("description").asString("");
 
                 if (!cweId.isBlank() || description.toUpperCase().contains("CWE-")) {
                     dto.setCweId(cweId);
@@ -130,7 +130,7 @@ public class CirclCVEService {
         dto.setCweDescription("");
     }
 
-    private void extractCvss(JsonNode cna, CVEDetailsDto dto) {
+    public static void extractCvss(JsonNode cna, CVEDetailsDto dto) {
         JsonNode metrics = cna.path("metrics");
 
         if (!metrics.isArray()) {
@@ -165,17 +165,17 @@ public class CirclCVEService {
         }
     }
 
-    private void setCvss(CVEDetailsDto dto, JsonNode cvss, String version) {
+    public static void setCvss(CVEDetailsDto dto, JsonNode cvss, String version) {
         if (cvss.has("baseScore")) {
             dto.setCvssScore(cvss.path("baseScore").asDouble());
         }
 
-        dto.setCvssSeverity(cvss.path("baseSeverity").asText(""));
-        dto.setCvssVector(cvss.path("vectorString").asText(""));
+        dto.setCvssSeverity(cvss.path("baseSeverity").asString(""));
+        dto.setCvssVector(cvss.path("vectorString").asString(""));
         dto.setCvssVersion(version);
     }
 
-    private void extractAffectedProducts(JsonNode cna, CVEDetailsDto dto) {
+    public static void extractAffectedProducts(JsonNode cna, CVEDetailsDto dto) {
         JsonNode affected = cna.path("affected");
 
         List<String> versions = new ArrayList<>();
@@ -184,8 +184,8 @@ public class CirclCVEService {
 
         if (affected.isArray()) {
             for (JsonNode item : affected) {
-                String vendor = item.path("vendor").asText("");
-                String product = item.path("product").asText("");
+                String vendor = item.path("vendor").asString("");
+                String product = item.path("product").asString("");
 
                 if (!vendor.isBlank()) {
                     vendors.add(vendor);
@@ -199,10 +199,10 @@ public class CirclCVEService {
 
                 if (versionArray.isArray()) {
                     for (JsonNode versionNode : versionArray) {
-                        String version = versionNode.path("version").asText("");
-                        String status = versionNode.path("status").asText("");
-                        String lessThan = versionNode.path("lessThan").asText("");
-                        String lessThanOrEqual = versionNode.path("lessThanOrEqual").asText("");
+                        String version = versionNode.path("version").asString("");
+                        String status = versionNode.path("status").asString("");
+                        String lessThan = versionNode.path("lessThan").asString("");
+                        String lessThanOrEqual = versionNode.path("lessThanOrEqual").asString("");
 
                         StringBuilder versionText = new StringBuilder();
 
@@ -235,14 +235,14 @@ public class CirclCVEService {
         dto.setAffectedVersions(versions);
     }
 
-    private void extractReferences(JsonNode root, CVEDetailsDto dto) {
+    public static void extractReferences(JsonNode root, CVEDetailsDto dto) {
         Set<String> refs = new LinkedHashSet<>();
 
         JsonNode cnaRefs = root.path("containers").path("cna").path("references");
 
         if (cnaRefs.isArray()) {
             for (JsonNode ref : cnaRefs) {
-                String url = ref.path("url").asText("");
+                String url = ref.path("url").asString("");
                 if (!url.isBlank()) {
                     refs.add(url);
                 }
@@ -257,7 +257,7 @@ public class CirclCVEService {
 
                 if (adpRefs.isArray()) {
                     for (JsonNode ref : adpRefs) {
-                        String url = ref.path("url").asText("");
+                        String url = ref.path("url").asString("");
                         if (!url.isBlank()) {
                             refs.add(url);
                         }
@@ -269,7 +269,7 @@ public class CirclCVEService {
         dto.setReferences(new ArrayList<>(refs));
     }
 
-    private void extractSsvc(JsonNode root, CVEDetailsDto dto) {
+    public static void extractSsvc(JsonNode root, CVEDetailsDto dto) {
         JsonNode adp = root.path("containers").path("adp");
 
         if (!adp.isArray()) {
@@ -298,15 +298,15 @@ public class CirclCVEService {
 
                 for (JsonNode option : options) {
                     if (option.has("Exploitation")) {
-                        dto.setExploitation(option.path("Exploitation").asText(""));
+                        dto.setExploitation(option.path("Exploitation").asString(""));
                     }
 
                     if (option.has("Automatable")) {
-                        dto.setAutomatable(option.path("Automatable").asText(""));
+                        dto.setAutomatable(option.path("Automatable").asString(""));
                     }
 
                     if (option.has("Technical Impact")) {
-                        dto.setTechnicalImpact(option.path("Technical Impact").asText(""));
+                        dto.setTechnicalImpact(option.path("Technical Impact").asString(""));
                     }
                 }
             }
@@ -325,11 +325,11 @@ public class CirclCVEService {
         }
     }
 
-    private String text(JsonNode node, String field) {
-        return node.path(field).asText("");
+    public static String text(JsonNode node, String field) {
+        return node.path(field).asString("");
     }
 
-    private String cleanText(String value) {
+    public static String cleanText(String value) {
         if (value == null) {
             return "";
         }
@@ -339,7 +339,7 @@ public class CirclCVEService {
                 .trim();
     }
 
-    private String cleanCweDescription(String value) {
+    public static String cleanCweDescription(String value) {
         if (value == null) {
             return "";
         }
@@ -415,7 +415,7 @@ public class CirclCVEService {
 
         if (root.has("schema_version")
                 || root.has("aliases")
-                || root.path("id").asText("").startsWith("GHSA-")) {
+                || root.path("id").asString("").startsWith("GHSA-")) {
             return convertGhsaToSummary(root);
         }
 
@@ -428,11 +428,11 @@ public class CirclCVEService {
         JsonNode metadata = root.path("cveMetadata");
         JsonNode cna = root.path("containers").path("cna");
 
-        dto.setCveId(metadata.path("cveId").asText(""));
-        dto.setTitle(cleanText(cna.path("title").asText("")));
+        dto.setCveId(metadata.path("cveId").asString(""));
+        dto.setTitle(cleanText(cna.path("title").asString("")));
         dto.setDescription(extractEnglishDescription(cna.path("descriptions")));
-        dto.setPublished(metadata.path("datePublished").asText(""));
-        dto.setUpdated(metadata.path("dateUpdated").asText(""));
+        dto.setPublished(metadata.path("datePublished").asString(""));
+        dto.setUpdated(metadata.path("dateUpdated").asString(""));
         dto.setSource("CVE");
 
         extractSummaryCweFromCveRecord(cna, dto);
@@ -454,23 +454,23 @@ public class CirclCVEService {
         CVESummaryDto dto = new CVESummaryDto();
 
         dto.setCveId(extractCveIdFromGhsa(root));
-        dto.setDescription(cleanText(root.path("details").asText("")));
+        dto.setDescription(cleanText(root.path("details").asString("")));
         dto.setTitle(shorten(dto.getDescription(), 160));
-        dto.setPublished(root.path("published").asText(""));
-        dto.setUpdated(root.path("modified").asText(""));
+        dto.setPublished(root.path("published").asString(""));
+        dto.setUpdated(root.path("modified").asString(""));
         dto.setSource("GHSA");
 
         JsonNode databaseSpecific = root.path("database_specific");
 
         dto.setSeverity(
                 databaseSpecific.path("severity")
-                        .asText("UNKNOWN")
+                        .asString("UNKNOWN")
                         .toUpperCase());
 
         JsonNode cweIds = databaseSpecific.path("cwe_ids");
 
         if (cweIds.isArray() && !cweIds.isEmpty()) {
-            dto.setCweId(cweIds.get(0).asText(""));
+            dto.setCweId(cweIds.get(0).asString(""));
         } else {
             dto.setCweId("");
         }
@@ -488,7 +488,7 @@ public class CirclCVEService {
 
         if (aliases.isArray()) {
             for (JsonNode alias : aliases) {
-                String value = alias.asText("").trim().toUpperCase();
+                String value = alias.asString("").trim().toUpperCase();
 
                 if (value.matches("^CVE-\\d{4}-\\d{4,}$")) {
                     return value;
@@ -496,7 +496,7 @@ public class CirclCVEService {
             }
         }
 
-        String id = root.path("id").asText("").trim().toUpperCase();
+        String id = root.path("id").asString("").trim().toUpperCase();
 
         if (id.matches("^CVE-\\d{4}-\\d{4,}$")) {
             return id;
@@ -523,14 +523,14 @@ public class CirclCVEService {
             }
 
             for (JsonNode description : descriptions) {
-                String cweId = description.path("cweId").asText("");
+                String cweId = description.path("cweId").asString("");
 
                 if (!cweId.isBlank()) {
                     dto.setCweId(cweId);
                     return;
                 }
 
-                String text = description.path("description").asText("");
+                String text = description.path("description").asString("");
                 String extracted = extractCweIdFromText(text);
 
                 if (!extracted.isBlank()) {
@@ -578,11 +578,11 @@ public class CirclCVEService {
 
                 dto.setSeverity(
                         cvss.path("baseSeverity")
-                                .asText("UNKNOWN")
+                                .asString("UNKNOWN")
                                 .toUpperCase());
 
                 dto.setCvssVersion(
-                        cvss.path("version").asText(
+                        cvss.path("version").asString(
                                 cvssVersionFromKey(key)));
 
                 return;
@@ -607,7 +607,7 @@ public class CirclCVEService {
          * calculated score.
          */
         for (JsonNode severityNode : severities) {
-            String type = severityNode.path("type").asText("");
+            String type = severityNode.path("type").asString("");
 
             if ("CVSS_V4".equalsIgnoreCase(type)) {
                 dto.setCvssVersion("4.0");
@@ -616,7 +616,7 @@ public class CirclCVEService {
         }
 
         for (JsonNode severityNode : severities) {
-            String type = severityNode.path("type").asText("");
+            String type = severityNode.path("type").asString("");
 
             if ("CVSS_V3".equalsIgnoreCase(type)) {
                 dto.setCvssVersion("3.x");
@@ -635,8 +635,8 @@ public class CirclCVEService {
 
         if (affected.isArray()) {
             for (JsonNode affectedItem : affected) {
-                String vendor = affectedItem.path("vendor").asText("");
-                String product = affectedItem.path("product").asText("");
+                String vendor = affectedItem.path("vendor").asString("");
+                String product = affectedItem.path("product").asString("");
 
                 if (!vendor.isBlank()) {
                     vendors.add(vendor);
@@ -731,15 +731,15 @@ public class CirclCVEService {
 
         for (JsonNode description : descriptions) {
             if ("en".equalsIgnoreCase(
-                    description.path("lang").asText(""))) {
+                    description.path("lang").asString(""))) {
                 return cleanText(
-                        description.path("value").asText(""));
+                        description.path("value").asString(""));
             }
         }
 
         if (!descriptions.isEmpty()) {
             return cleanText(
-                    descriptions.get(0).path("value").asText(""));
+                    descriptions.get(0).path("value").asString(""));
         }
 
         return "";

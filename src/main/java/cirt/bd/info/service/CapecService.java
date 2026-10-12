@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,11 @@ public class CapecService {
 
     private static final String CAPEC_DETAIL_URL = "https://vulnerability.circl.lu/api/capec/{capecId}";
 
+    public Optional<CapecEntity> getCapecDetails(int capecId) {
+        return this.capecRepository.findById(capecId);
+    }
+
+    
     public void importAllCapecs() {
         for (int page = 1; page <= 7; page++) {
             String response = restClient
