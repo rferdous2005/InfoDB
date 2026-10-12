@@ -11,23 +11,14 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-<<<<<<< HEAD
-import org.springframework.http.MediaType;
-=======
 import org.springframework.http.ResponseEntity;
->>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-<<<<<<< HEAD
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-=======
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
->>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -37,16 +28,10 @@ import cirt.bd.info.entity.CVEEntity;
 import cirt.bd.info.entity.CWEEntity;
 import cirt.bd.info.repository.CVERepository;
 import cirt.bd.info.service.CVESyncService;
-<<<<<<< HEAD
-import cirt.bd.info.service.CapecService;
-import cirt.bd.info.service.CirclCveService;
-import cirt.bd.info.service.CweService;
-=======
 import cirt.bd.info.service.CirclCVEService;
 import cirt.bd.info.service.CirclCWEService;
 import cirt.bd.info.service.CirclCapecService;
 import cirt.bd.info.service.CveService;
->>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
 import jakarta.transaction.Transactional;
 
 @Controller
@@ -55,23 +40,6 @@ public class BasicRoute {
     private static final Logger log = LoggerFactory.getLogger(BasicRoute.class);
     private final int PAGE_SIZE = 100;
     private final CVERepository cveRepository;
-<<<<<<< HEAD
-    private final CirclCveService circlCveService;
-    private final CweService cweService;
-    private final CapecService capecService;
-
-    public BasicRoute(
-            CVERepository cveRepository,
-            CirclCveService circlCveService,
-            CweService cweService,
-            CapecService capecService) {
-        this.cveRepository = cveRepository;
-        this.circlCveService = circlCveService;
-        this.cweService = cweService;
-        this.capecService = capecService;
-    }
-
-=======
     private final CveService cveService;
 
     public BasicRoute(
@@ -82,7 +50,6 @@ public class BasicRoute {
     }
 
     
->>>>>>> 00b760ac682eb02428d3d334773b838cc501cb93
     @GetMapping("/init")
     public void fetchHistoricalCVEs() throws InterruptedException {
         // Instant newestTime = cveRepository.findTopByOrderByUpdatedAtDesc()
@@ -165,15 +132,15 @@ public class BasicRoute {
         return cveEntity;
     }
 
-    @GetMapping(value = "/cwe")
-    public String importCwe() {
-        String url = "https://vulnerability.circl.lu/api/cwe/?per_page=1000&page=1";
-        cweService.importAllCwes();
-        return "CWE info saved to DB";
-    }
-    @GetMapping(value = "/capec")
-    public String importCapec() {
-        capecService.importAllCapecs();
-        return "CAPEC info saved to DB";
-    }
+    // @GetMapping(value = "/cwe")
+    // public String importCwe() {
+    //     String url = "https://vulnerability.circl.lu/api/cwe/?per_page=1000&page=1";
+    //     cweService.importAllCwes();
+    //     return "CWE info saved to DB";
+    // }
+    // @GetMapping(value = "/capec")
+    // public String importCapec() {
+    //     capecService.importAllCapecs();
+    //     return "CAPEC info saved to DB";
+    // }
 }
